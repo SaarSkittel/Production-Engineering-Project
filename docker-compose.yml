@@ -1,0 +1,107 @@
+version: "3"
+services:
+  dns:
+    container_name: dns
+    image: nginx:latest
+    volumes:
+      - ./Backend/DNS/nginx.conf:/usr/local/etc/nginx/nginx.conf
+    ports:
+      - 8001:80
+    networks:
+      backend:
+        ipv4_address: 172.28.0.2
+
+    depends_on:
+      - "lb1"
+      - "lb2"
+      
+  lb1:
+    container_name: lb1
+    build: ./Backend/Load Balancer
+    ports:
+      - 8002:80
+    networks:
+      backend:
+        ipv4_address: 172.28.0.3
+    depends_on:
+      - "server1"
+      - "server2"
+      - "server3"
+  lb2:
+    container_name: lb2
+    build: ./Backend/Load Balancer
+    ports:
+      - 8003:80
+    networks:
+      backend:
+        ipv4_address: 172.28.0.4
+    depends_on:
+      - "server1"
+      - "server2"
+      - "server3"
+    
+  server1:
+    container_name: server1
+    image: "node:8"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./Backend/Server:/home/node/app
+    ports:
+      - "8004:80"
+    networks:
+      backend:
+        ipv4_address: 172.28.0.5
+    command: "npm start"
+    
+  server2:
+    container_name: server2
+    image: "node:8"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./Backend/Server:/home/node/app
+    networks:
+      backend:
+        ipv4_address: 172.28.0.6
+    ports:
+      - "8005:80"
+    command: "npm start"
+   
+  server3:
+    container_name: server3
+    image: "node:8"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./Backend/Server:/home/node/app
+    ports:
+      - "8006:80"
+    networks:
+      backend:
+        ipv4_address: 172.28.0.7
+    command: "npm start"
+   
+  db:
+    container_name: mysql
+    image: mysql:latest
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: books
+      MYSQL_USER: Saar
+      MYSQL_PASSWORD: Password
+    ports:
+      - 6033:3306
+    networks:
+      backend:
+        ipv4_address: 172.28.0.8
+        
+networks:
+  backend:
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
