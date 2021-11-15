@@ -3,19 +3,27 @@ services:
   frontend:
     container_name: website
     build: ./Frontend/website
+    stdin_open: true
+    tty: true
+    expose:
+      - 3000
     ports:
-      - 8000:80
+      - "3000:3000"
+    volumes:
+      - ./Frontend/website/src:/app/src
     networks:
       backend:
         ipv4_address: 172.28.0.9
-      frontend:
-        ipv4_address: 172.27.0.2
+    depends_on:
+      - "dns"
 
   dns:
     container_name: dns
     build: ./Backend/DNS
+    expose:
+      - 81
     ports:
-      - 8001:80
+      - 8001:81
     networks:
       backend:
         ipv4_address: 172.28.0.2
@@ -27,7 +35,9 @@ services:
     container_name: lb1
     build: ./Backend/Load Balancer
     ports:
-      - 8002:80
+      - 8002:82
+    expose:
+      - 82
     networks:
       backend:
         ipv4_address: 172.28.0.3
@@ -39,7 +49,9 @@ services:
     container_name: lb2
     build: ./Backend/Load Balancer
     ports:
-      - 8003:80
+      - 8003:83
+    expose:
+      - 83
     networks:
       backend:
         ipv4_address: 172.28.0.4
@@ -54,10 +66,13 @@ services:
     working_dir: /home/node/app
     environment:
       - NODE_ENV=production
+      - PORT=84
     volumes:
       - ./Backend/Server:/home/node/app
     ports:
-      - "8004:80"
+      - "8004:84"
+    expose:
+      - 84
     networks:
       backend:
         ipv4_address: 172.28.0.5
@@ -69,13 +84,16 @@ services:
     working_dir: /home/node/app
     environment:
       - NODE_ENV=production
+      - PORT=85
     volumes:
       - ./Backend/Server:/home/node/app
     networks:
       backend:
         ipv4_address: 172.28.0.6
     ports:
-      - "8005:80"
+      - "8005:85"
+    expose:
+      - 85
     command: "npm start"
 
   server3:
@@ -84,14 +102,17 @@ services:
     working_dir: /home/node/app
     environment:
       - NODE_ENV=production
+      - PORT=86
     volumes:
       - ./Backend/Server:/home/node/app
     ports:
-      - "8006:80"
+      - "8006:86"
+    expose:
+      - 86
+    command: "npm start"
     networks:
       backend:
         ipv4_address: 172.28.0.7
-    command: "npm start"
 
   db:
     container_name: mysql
@@ -113,7 +134,3 @@ networks:
     ipam:
       config:
         - subnet: 172.28.0.0/16
-  frontend:
-    ipam:
-      config:
-        - subnet: 172.27.0.0/16
