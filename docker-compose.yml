@@ -120,9 +120,13 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: books
+      MYSQL_DATABASE: users
       MYSQL_USER: Saar
       MYSQL_PASSWORD: Password
+    volumes:
+        - type: bind
+          source: ./Backend/MySQL
+          target: /var/lib/mysql
     ports:
       - 6033:3306
     networks:
