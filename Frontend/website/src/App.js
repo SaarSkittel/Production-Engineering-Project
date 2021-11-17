@@ -8,8 +8,8 @@ function App() {
     fetch("http://localhost:8001/")
       .then((response) => response.json())
       .then((data) => {
-        setData(data.message);
-        console.log(data.message);
+        setData(data[0].name);
+        console.log(data.name);
       })
       .catch((err) => {
         console.log(err);
