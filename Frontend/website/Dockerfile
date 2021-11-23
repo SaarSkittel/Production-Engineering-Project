@@ -6,6 +6,9 @@ COPY package.json ./
 COPY package-lock.json ./
 RUN npm install --silent
 RUN npm install react-scripts@3.4.0 -g --silent
+RUN npm install react-router-dom
+RUN npm install @mui/material @emotion/react @emotion/styled
+RUN npm install @mui/icons-material
 COPY . .
 
 CMD ["npm", "start"]
