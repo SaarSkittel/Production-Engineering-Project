@@ -1,30 +1,27 @@
 import React from "react";
 import logo from "./logo.svg";
 import "./App.css";
-import NavBar from "./components/NavBar";
-
+import NavBar from "./Components/NavBar";
+import HomePage from "./Pages/HomePage";
+import LoginPage from "./Pages/LoginPage";
+import RegisterPage from"./Pages/RegisterPage";
+import { BrowserRouter as Route, Router, Switch, Link } from "react-router-dom";
+import History from "./History";
 function App() {
-  const [data, setData] = React.useState();
-  React.useEffect(() => {
-    fetch("http://localhost:8001/")
-      .then((response) => response.json())
-      .then((data) => {
-        setData(data[0].name);
-        console.log(data.name);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
 
   return (
-    <div className="App">
-      <NavBar/>
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>{!data ? "Loading..." : data}</p>
-      </header>
-    </div>
+    <Router history={History}>
+      <div className="App">
+        <NavBar />
+        <div>
+          <Switch>
+            <Route exact path="/register"> <RegisterPage/> </Route>
+            <Route exact path="/login"> <LoginPage/> </Route>
+            <Route exact path="/"> <HomePage /> </Route>
+          </Switch>
+        </div>
+      </div>
+    </Router>
   );
 }
 
