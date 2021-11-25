@@ -1,5 +1,5 @@
 import React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Grid, makeStyles, Paper, TextField, Typography } from "@material-ui/core";
 const useStyle = makeStyles((theme) => ({
     paper:{
@@ -60,6 +60,25 @@ const RegisterPage = () => {
                             else{
                                 setError("");
                                 // CREATE A REQUEST TO SERVER TO REGISTER USER TO DATABASE.
+                               const data={ 
+                                userName:  userName,
+                                password:  password,
+                                fullName: fullName
+                                };
+                                const requestOptions = {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(data)
+                                };
+                                fetch('http://localhost:8001/register', requestOptions).then((response) => response.json())
+                                .then((dataRes) => {
+                                  console.log(`response status${dataRes.response}`);
+                                  console.log(`response from port${dataRes.port}`);
+                                  console.log(requestOptions);
+                                })
+                                  .catch(err => {
+                                    console.log(err);
+                                  });
                             }
                         }
                     }>

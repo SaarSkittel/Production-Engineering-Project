@@ -62,8 +62,7 @@ services:
 
   server1:
     container_name: server1
-    image: "node:8"
-    working_dir: /home/node/app
+    build: ./Backend/Server
     environment:
       - NODE_ENV=production
       - PORT=84
@@ -80,8 +79,7 @@ services:
 
   server2:
     container_name: server2
-    image: "node:8"
-    working_dir: /home/node/app
+    build: ./Backend/Server
     environment:
       - NODE_ENV=production
       - PORT=85
@@ -98,8 +96,7 @@ services:
 
   server3:
     container_name: server3
-    image: "node:8"
-    working_dir: /home/node/app
+    build: ./Backend/Server
     environment:
       - NODE_ENV=production
       - PORT=86

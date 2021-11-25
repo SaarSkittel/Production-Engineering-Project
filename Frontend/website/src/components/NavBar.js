@@ -31,7 +31,10 @@ const NavBar = () => {
         >
           Register
         </Button>
-        <Button color="inherit" position="absolute"onClick={() => History.push("/login")}>
+        <Button color="inherit" 
+        position="absolute" 
+        onClick={() => History.push("/login")}
+        >
           Login
         </Button>
       </Toolbar>
