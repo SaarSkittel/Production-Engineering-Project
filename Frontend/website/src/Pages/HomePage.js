@@ -20,9 +20,8 @@ const HomePage = () => {
     }, []);
     return ( <
         div >
-        <
-        p > {!data ? "Loading..." : data } < /p> <
-        /div>
+        <p> {!data ? "Loading..." : data } </p> 
+        </div>
     );
 };
 export default HomePage;

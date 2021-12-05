@@ -36,7 +36,26 @@ const LoginPage = () => {
                             }
                             else{
                                 //CREATE A REQUEST TO SERVER FOR LOGIN 
-
+                                const data = {
+                                    userName: userName,
+                                    password: password
+                                  };
+                                  //GET REQUEST W/ DATA
+                                const requestOptions = {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify(data),
+                                };
+                                fetch("http://localhost:8001/login", requestOptions)
+                                .then((response) => response.json())
+                                .then((dataRes) => {
+                                    //CHECK IF RESPONSE FROM SERVERS
+                                    console.log(dataRes);
+                                    //GO TO THE ONE PAGE BACK
+                                })
+                                .catch((err) => {
+                                  console.log(err);
+                                });
                                 //SEND TOKEN IF INFORMATION IS CORRECT
 
                                 //SEND ERROR IF INFORMATION IS NOT CORRECT OR USER DOES NOT EXSIST
