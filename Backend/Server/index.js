@@ -16,6 +16,7 @@ const connection = mysql.createConnection({
     database: "users",
 });
 
+//CREATE TABLE IN DB
 function databaseSetup() {
     connection.connect((err) => {
         connection.query(
@@ -83,7 +84,25 @@ app.post("/register", (req, res) => {
     );
 });
 
-app.post("/changePassword");
+app.post("/changePassword", (req, res) => {
+    const verify = verifyAccessToken(req.body.token);
+    if (verify) {
+        const user = jwt.decode(req.body.token).user_name;
+        connection.query("UPDATE users SET password = ? WHERE user_name = ?", [
+            req.body.password,
+            user,
+        ]);
+        res.send(
+            JSON.stringify({
+                response: "OK",
+                port: port,
+                status: "Assigned new token",
+                accessToken: accessToken,
+            })
+        );
+    }
+});
+
 app.get("/users");
 app.get("/users/name?");
 app.get("/users/id?");
@@ -108,49 +127,47 @@ app.post("/login", (req, res) => {
                 result[0].user_name === req.body.userName &&
                 result[0].password === req.body.password
             ) {
-                console.log(result[0].user_name);
-                jwt.verify(req.token, process.env.ACCCESS_TOKEN_SECRET, (err) => {
-                    if (err) {
-                        const userName = req.body.userName;
-                        const user = { name: userName };
-                        const accessToken = generateAccessToken(user);
-                        connection.query("UPDATE users SET token = ? WHERE id = ?", [
-                            accessToken,
-                            result[0].id,
-                        ]);
-                        console.log(accessToken);
-                        res.send(
-                            JSON.stringify({
-                                response: "OK",
-                                port: port,
-                                status: "Assigned new token",
-                                accessToken: accessToken,
-                            })
-                        );
-                    } else {
-                        res.send(
-                            JSON.stringify({
-                                response: "OK",
-                                port: port,
-                                status: "Valid token",
-                                accessToken: result[0].token,
-                            })
-                        );
-                        console.log(accessToken);
-                    }
-                });
+                const verify = verifyAccessToken(result[0].token);
+                if (!verify) {
+                    const userName = req.body.userName;
+                    const user = { name: userName };
+                    const accessToken = generateAccessToken(user);
+                    connection.query("UPDATE users SET token = ? WHERE id = ?", [
+                        accessToken,
+                        result[0].id,
+                    ]);
+                    res.send(
+                        JSON.stringify({
+                            response: "OK",
+                            port: port,
+                            status: "Assigned new token",
+                            accessToken: accessToken,
+                        })
+                    );
+                } else {
+                    res.send(
+                        JSON.stringify({
+                            response: "OK",
+                            port: port,
+                            status: "Valid token",
+                            accessToken: result[0].token,
+                        })
+                    );
+                    console.log(accessToken);
+                }
             }
         }
     );
 });
 
-function verifyAccessToken(req, res) {
-    const token = req.body.token;
-    if (token == null) return res.sendStatus(401);
+function verifyAccessToken(token) {
+    if (token == null) return false;
     jwt.verify(token, process.env.ACCCESS_TOKEN_SECRET, (err, user) => {
         if (err) {
             console.log(err);
-            return res.sendStatus(403);
+            return false;
+        } else {
+            return true;
         }
     });
 }
