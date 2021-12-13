@@ -2,11 +2,12 @@ const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql");
 const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 const app = express();
-app.use(cors());
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
-
+app.use(cookieParser());
 //CONNEFION TO DB
 const connection = mysql.createConnection({
     host: "172.28.0.8",
@@ -37,13 +38,14 @@ app.listen(port, () => {
 });
 
 app.get("/", (req, res) => {
-    //verifyAccessToken(req, res);
-    connection.connect((err) => {
-        connection.query("SELECT * FROM users", (err, result, fields) => {
-            if (err) throw err;
-            res.send(JSON.stringify(result));
-        });
-    });
+    const token = req.cookies.AccessToken;
+    console.log(`Request cookies: ${token}`);
+    let verification = verifyAccessToken(token);
+    if (verification === true) {
+        const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
+        console.log(`User name: ${user}`);
+        res.send(JSON.stringify(`Hello, ${user}`));
+    }
 });
 
 app.post("/register", (req, res) => {
@@ -86,26 +88,26 @@ app.post("/register", (req, res) => {
 
 app.post("/changePassword", (req, res) => {
     const verify = verifyAccessToken(req.body.token);
-    if (verify) {
+    if (verify === true) {
         const user = jwt.decode(req.body.token).user_name;
         connection.query("UPDATE users SET password = ? WHERE user_name = ?", [
             req.body.password,
             user,
         ]);
+        res.cookie("AccessToken", accessToken, { httpOnly: true, path: "/" });
         res.send(
             JSON.stringify({
                 response: "OK",
                 port: port,
                 status: "Assigned new token",
-                accessToken: accessToken,
             })
         );
     }
 });
 
-app.get("/users");
-app.get("/users/name?");
-app.get("/users/id?");
+app.get("/users", (req, res) => {});
+app.get("/users/name?", (req, res) => {});
+app.get("/users/id?", (req, res) => {});
 
 app.post("/login", (req, res) => {
     connection.query(
@@ -127,49 +129,68 @@ app.post("/login", (req, res) => {
                 result[0].user_name === req.body.userName &&
                 result[0].password === req.body.password
             ) {
+                console.log(`Req Token: ${req.cookies.AccessToken}`);
+                console.log(`DB Token: ${result[0].token}`);
                 const verify = verifyAccessToken(result[0].token);
-                if (!verify) {
+                console.log(`Verification: ${verify}`);
+                if (verify === false) {
                     const userName = req.body.userName;
-                    const user = { name: userName };
+                    const user = { user_name: userName };
                     const accessToken = generateAccessToken(user);
                     connection.query("UPDATE users SET token = ? WHERE id = ?", [
                         accessToken,
                         result[0].id,
                     ]);
+                    res.cookie("AccessToken", accessToken, {
+                        httpOnly: true,
+                    });
                     res.send(
                         JSON.stringify({
                             response: "OK",
                             port: port,
                             status: "Assigned new token",
-                            accessToken: accessToken,
                         })
                     );
                 } else {
-                    res.send(
-                        JSON.stringify({
-                            response: "OK",
-                            port: port,
-                            status: "Valid token",
-                            accessToken: result[0].token,
+                    res
+                        .cookie("AccessToken", result[0].token, {
+                            httpOnly: true,
                         })
-                    );
-                    console.log(accessToken);
+                        .send(
+                            JSON.stringify({
+                                response: "OK",
+                                port: port,
+                                status: "Valid token",
+                            })
+                        );
                 }
+            } else {
+                res.send(
+                    JSON.stringify({
+                        response: "ERROR",
+                        port: port,
+                        status: "",
+                    })
+                );
             }
         }
     );
 });
 
 function verifyAccessToken(token) {
-    if (token == null) return false;
-    jwt.verify(token, process.env.ACCCESS_TOKEN_SECRET, (err, user) => {
-        if (err) {
-            console.log(err);
-            return false;
-        } else {
-            return true;
-        }
-    });
+    let isValid = false;
+    if (token === null) isValid = false;
+    else {
+        jwt.verify(token, process.env.ACCCESS_TOKEN_SECRET, (err, user) => {
+            if (err) {
+                console.log(`Validation error:${err}`);
+                isValid = false;
+            } else {
+                isValid = true;
+            }
+        });
+    }
+    return isValid;
 }
 
 function generateAccessToken(user) {

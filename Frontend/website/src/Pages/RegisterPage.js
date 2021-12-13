@@ -102,7 +102,7 @@ const RegisterPage = () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data),
                   };
-                  fetch("http://localhost:8001/register", requestOptions)
+                  fetch("http://localhost:8002/register", requestOptions)
                     .then((response) => response.json())
                     .then((dataRes) => {
                       //CHECK IF RESPONSE FROM SERVERS

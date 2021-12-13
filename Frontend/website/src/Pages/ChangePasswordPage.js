@@ -76,7 +76,7 @@ const ChangePasswordPage = () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data),
                   };
-                  fetch("http://localhost:8001/change_password", requestOptions)
+                  fetch("http://localhost:8002/change_password", requestOptions)
                     .catch((err) => {
                       console.log(err);
                     });
