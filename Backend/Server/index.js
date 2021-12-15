@@ -58,7 +58,7 @@ app.post("/register", (req, res) => {
             //INSERT USER TO DB W/ HANDLING ERRORS
             if (result.length === 0) {
                 let query =
-                    "INSERT INTO users (user_name, full_name, password) VALUES (?)";
+                    "INSERT INTO users (user_name, full_name, password) VALUES (?);";
                 let values = [req.body.userName, req.body.fullName, req.body.password];
                 connection.query(query, [values], (err, result) => {
                     if (err) {
@@ -87,10 +87,13 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/changePassword", (req, res) => {
-    const verify = verifyAccessToken(req.body.token);
+    const verify = verifyAccessToken(req.cookies.AccessToken);
     if (verify === true) {
-        const user = jwt.decode(req.body.token).user_name;
-        connection.query("UPDATE users SET password = ? WHERE user_name = ?", [
+        const user = jwt.decode(
+            req.cookies.accessToken,
+            process.env.ACCCESS_TOKEN_SECRET
+        ).user_name;
+        connection.query("UPDATE users SET password = ? WHERE user_name = ?;", [
             req.body.password,
             user,
         ]);
@@ -105,9 +108,66 @@ app.post("/changePassword", (req, res) => {
     }
 });
 
-app.get("/users", (req, res) => {});
-app.get("/users/name?", (req, res) => {});
-app.get("/users/id?", (req, res) => {});
+app.post("/users", async(req, res) => {
+    const verify = verifyAccessToken(req.cookies.AccessToken);
+    if (verify === true) {
+        const id = req.query.id;
+        const name = req.query.name;
+        if (id !== undefined) {
+            console.log(`request id: ${id}`);
+            connection.query(
+                "SELECT id, user_name, full_name FROM users WHERE id = ?;", [parseInt(id)],
+                (err, result) => {
+                    if (err) {
+                        res.sendStatus(404);
+                    } else {
+                        console.log(`id name: ${JSON.stringify(result)}`);
+                        res.send(result);
+                    }
+                }
+            );
+        } else if (name !== undefined) {
+            console.log(`request name: ${name}`);
+            connection.query(
+                "SELECT id, user_name, full_name FROM users WHERE user_name = ?;", [name],
+                (err, result) => {
+                    if (err) {
+                        res.sendStatus(404);
+                    } else {
+                        console.log(`name users:${JSON.stringify(result)}`);
+                        res.send(result);
+                    }
+                }
+            );
+        } else {
+            connection.query(
+                "SELECT id, user_name, full_name FROM users;",
+                (err, result) => {
+                    if (err) {
+                        res.sendStatus(404);
+                    } else {
+                        console.log(`all users: ${JSON.stringify(result)}`);
+                        res.send(result);
+                    }
+                }
+            );
+        }
+    }
+});
+app.delete("/logout", (req, res) => {
+    const token = req.cookies.AccessToken;
+    const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
+    connection.query(
+        "UPDATE users SET token = NULL WHERE user_name = ?", [user],
+        (err, result) => {
+            if (err) res.sendStatus(404);
+            else {
+                res.clearCookie("AccessToken");
+                res.sendStatus(200);
+            }
+        }
+    );
+});
 
 app.post("/login", (req, res) => {
     connection.query(
@@ -129,8 +189,6 @@ app.post("/login", (req, res) => {
                 result[0].user_name === req.body.userName &&
                 result[0].password === req.body.password
             ) {
-                console.log(`Req Token: ${req.cookies.AccessToken}`);
-                console.log(`DB Token: ${result[0].token}`);
                 const verify = verifyAccessToken(result[0].token);
                 console.log(`Verification: ${verify}`);
                 if (verify === false) {
