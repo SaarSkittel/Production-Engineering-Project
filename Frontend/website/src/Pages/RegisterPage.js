@@ -1,5 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import History from "../History";
 import {
   Button,
   Grid,
@@ -108,6 +109,7 @@ const RegisterPage = () => {
                       //CHECK IF RESPONSE FROM SERVERS
                       if(dataRes.response === "ok"){
                           //GO TO THE ONE PAGE BACK
+                          History.pop();
                       }
                       else{
                           setError(dataRes.status)

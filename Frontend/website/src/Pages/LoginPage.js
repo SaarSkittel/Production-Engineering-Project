@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import History from "../History";
 import {
   Button,
   Grid,
@@ -66,7 +67,7 @@ const LoginPage = () => {
                   //GET REQUEST W/ DATA
                   const requestOptions = {
                     method: "POST",
-                    credentials: 'include',
+                    credentials: "include",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(data),
                   };
@@ -75,9 +76,8 @@ const LoginPage = () => {
                     .then((dataRes) => {
                       //CHECK IF RESPONSE FROM SERVERS
                       console.log(dataRes);
-                      //SAVE TOKEN IN COOKIES
-                      console.log(`token ${document.cookie}`)
                       //GO TO HOME PAGE AND CLEAR HISTORY
+                      
                     })
                     .catch((err) => {
                       console.log(err);

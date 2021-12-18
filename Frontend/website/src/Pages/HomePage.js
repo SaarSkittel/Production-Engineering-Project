@@ -3,14 +3,16 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { makeStyles, Typography } from "@material-ui/core";
 import UserTable from "../Components/UserTable";
+import History from "../History";
 const useStyle = makeStyles((theme) => {});
 
-const HomePage = () => {
+const HomePage = (props) => {
   const classes = useStyle();
   const [nameData, setNameData] = useState();
   const [tableData, setTableData] = useState([]);
-  const [idData, setIdData] = useState([]);
+
   const [userData, setUserData] = useState([]);
+
 
   const requestOptionsGet = {
     method: "GET",
@@ -44,10 +46,12 @@ const HomePage = () => {
         console.log(err);
       });
   }, []);
+
+
   return (
     <div>
       <Typography> {!nameData ? "Loading..." : nameData} </Typography>
-      <UserTable userList= {tableData}/>
+      {!props.isLoggedIn? <Typography>Not logged in</Typography>:<UserTable userList= {tableData}/>}
     </div>
   );
 };

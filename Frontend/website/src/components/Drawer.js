@@ -37,7 +37,6 @@ export default function Drawer() {
       <SwipeableDrawer anchor="left" color="primary" open={open} onClose={() => setOpen(false)}>
           <div className={classes.list}>
         <List >
-         
           <ListItem>
           <ListItemIcon>
                 <InfoIcon className={classes.color} />

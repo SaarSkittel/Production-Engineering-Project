@@ -39,11 +39,9 @@ app.listen(port, () => {
 
 app.get("/", (req, res) => {
     const token = req.cookies.AccessToken;
-    console.log(`Request cookies: ${token}`);
     let verification = verifyAccessToken(token);
     if (verification === true) {
         const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
-        console.log(`User name: ${user}`);
         res.send(JSON.stringify(`Hello, ${user}`));
     }
 });
@@ -154,14 +152,17 @@ app.post("/users", async(req, res) => {
         }
     }
 });
+
 app.delete("/logout", (req, res) => {
     const token = req.cookies.AccessToken;
     const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
+    console.log(`user name: ${user}`);
     connection.query(
-        "UPDATE users SET token = NULL WHERE user_name = ?", [user],
+        "UPDATE users SET token = NULL WHERE user_name = ?;", [user],
         (err, result) => {
-            if (err) res.sendStatus(404);
-            else {
+            if (err) {
+                console.log(`Token delete token: ${err}`);
+            } else {
                 res.clearCookie("AccessToken");
                 res.sendStatus(200);
             }
@@ -235,9 +236,19 @@ app.post("/login", (req, res) => {
     );
 });
 
+app.get("/auth", (req, res) => {
+    let isLoggedin;
+    if (!verifyAccessToken(req.cookies.AccessToken)) {
+        isLoggedin = false;
+    } else {
+        isLoggedin = true;
+    }
+    res.send(JSON.stringify({ loginStatus: isLoggedin }));
+});
+
 function verifyAccessToken(token) {
     let isValid = false;
-    if (token === null) isValid = false;
+    if (token === undefined) isValid = false;
     else {
         jwt.verify(token, process.env.ACCCESS_TOKEN_SECRET, (err, user) => {
             if (err) {
@@ -248,6 +259,7 @@ function verifyAccessToken(token) {
             }
         });
     }
+    console.log(`Validation: ${isValid}`);
     return isValid;
 }
 
