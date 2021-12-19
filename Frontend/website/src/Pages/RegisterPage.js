@@ -1,6 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import History from "../History";
+import { useHistory, Redirect } from "react-router-dom";
 import {
   Button,
   Grid,
@@ -23,14 +23,18 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 
-const RegisterPage = () => {
+const RegisterPage = (props) => {
   const classes = useStyle();
+  let history= useHistory();
   const [userName, setUserName] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [error, setError] = useState("");
-
+  if(props.isLoggedIn){
+    return (<Redirect to="/"/>);
+  }
+  else{
   return (
     <Grid>
       <Paper className={classes.paper} elevation={20}>
@@ -107,12 +111,11 @@ const RegisterPage = () => {
                     .then((response) => response.json())
                     .then((dataRes) => {
                       //CHECK IF RESPONSE FROM SERVERS
-                      if(dataRes.response === "ok"){
-                          //GO TO THE ONE PAGE BACK
-                          History.pop();
-                      }
-                      else{
-                          setError(dataRes.status)
+                      if (dataRes.response === "ok") {
+                        //GO TO THE ONE PAGE BACK
+                        window.location.reload();
+                      } else {
+                        setError(dataRes.status);
                       }
                     })
                     .catch((err) => {
@@ -131,5 +134,6 @@ const RegisterPage = () => {
       </Paper>
     </Grid>
   );
+  }
 };
 export default RegisterPage;

@@ -2,9 +2,10 @@ import React from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import History from "../History";
+import {useHistory} from "react-router-dom";
 import { Button, makeStyles } from "@material-ui/core";
 import Drawer from "./Drawer";
+import {Redirect} from "react-router-dom";
 const useStyle = makeStyles((theme) => ({
   appBar: {
     backgroundColor: "#000",
@@ -16,6 +17,7 @@ const useStyle = makeStyles((theme) => ({
 
 const NavBar = (props) => {
   const classes = useStyle();
+  let history= useHistory();
   const requestOptionsDelete = {
     method: "DELETE",
     credentials: "include",
@@ -33,14 +35,14 @@ const NavBar = (props) => {
             <Button
               color="inherit"
               position="absolute"
-              onClick={() => History.push("/register")}
+              onClick={() => history.push("/register")}
             >
               Register
             </Button>
             <Button
               color="inherit"
               position="absolute"
-              onClick={() => History.push("/login")}
+              onClick={() => history.push("/login")}
             >
               Login
             </Button>
@@ -49,7 +51,7 @@ const NavBar = (props) => {
       ) : (
         <AppBar position="static">
           <Toolbar className={classes.appBar} variant="dense">
-            <Drawer />
+            <Drawer isLoggedIn={props.isLoggedIn} />
             <Typography variant="h6" color="common.white" component="div">
               Saar Skittel
             </Typography>
@@ -63,6 +65,7 @@ const NavBar = (props) => {
                     //CHECK IF RESPONSE FROM SERVERS
                     console.log(dataRes);
                     //GO TO HOME PAGE AND CLEAR HISTORY
+                    window.location.reload();
                   })
                   .catch((err) => {
                     console.log(err);

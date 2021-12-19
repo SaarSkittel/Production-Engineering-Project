@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { makeStyles, Typography } from "@material-ui/core";
 import UserTable from "../Components/UserTable";
-import History from "../History";
+
 const useStyle = makeStyles((theme) => {});
 
 const HomePage = (props) => {

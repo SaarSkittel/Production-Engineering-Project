@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import History from "../History";
+import { useHistory } from "react-router-dom";
+import {Redirect} from "react-router-dom";
 import {
   Button,
   Grid,
@@ -21,11 +22,16 @@ const useStyle = makeStyles((theme) => ({
     marginBottom: "20px",
   },
 }));
-const LoginPage = () => {
+const LoginPage = (props) => {
+  let history = useHistory();
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const classes = useStyle();
+  if(props.isLoggedIn){
+    return <Redirect to="/" />
+  }
+  else{
   return (
     <Grid>
       <Paper className={classes.paper} elevation={20}>
@@ -77,7 +83,7 @@ const LoginPage = () => {
                       //CHECK IF RESPONSE FROM SERVERS
                       console.log(dataRes);
                       //GO TO HOME PAGE AND CLEAR HISTORY
-                      
+                      window.location.reload();
                     })
                     .catch((err) => {
                       console.log(err);
@@ -95,5 +101,6 @@ const LoginPage = () => {
       </Paper>
     </Grid>
   );
+  }
 };
 export default LoginPage;
