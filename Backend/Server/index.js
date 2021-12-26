@@ -3,266 +3,154 @@ const cors = require("cors");
 const mysql = require("mysql");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const request = require("request");
+const cheerio = require("cheerio");
+const { verifyAccessToken, generateAccessToken } = require("./Auth");
+const {
+    getUserInfoByID,
+    getUserInfoByName,
+    getAllUserInfo,
+    changePassword,
+    logout,
+    getUserInfoForLogin,
+    updateUserToken,
+    addUser,
+    createConnection,
+    databaseSetup,
+} = require("./Queries");
 require("dotenv").config();
+
 const app = express();
 app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 app.use(express.json());
 app.use(cookieParser());
 //CONNEFION TO DB
-const connection = mysql.createConnection({
-    host: "172.28.0.8",
-    port: "3306",
-    user: "Saar",
-    password: "Password",
-    database: "users",
-});
 
 //CREATE TABLE IN DB
-function databaseSetup() {
-    connection.connect((err) => {
-        connection.query(
-            "CREATE TABLE IF NOT EXISTS users(id INTEGER AUTO_INCREMENT, user_name VARCHAR(255) NOT NULL, full_name TEXT NOT NULL, password TEXT NOT NULL, token TEXT, PRIMARY KEY(id, user_name));",
-            (err, result) => {
-                if (err) throw err;
-            }
-        );
-    });
-}
 
 const port = process.env.PORT || 80;
 
 //CREATE TABLE IF NOT EXISTS users(id INTEGER AUTO_INCREMENT, user_name VARCHAR(255) NOT NULL, full_name TEXT NOT NULL, password TEXT NOT NULL, PRIMARY KEY(id, user_name));
 app.listen(port, () => {
     console.log(`Listening on port ${port}`);
+    createConnection();
     databaseSetup();
 });
 
-app.get("/", (req, res) => {
-    const token = req.cookies.AccessToken;
-    let verification = verifyAccessToken(token);
-    if (verification === true) {
-        const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
-        res.send(JSON.stringify(`Hello, ${user}`));
-    }
+app.get("/", verifyAccessToken, async(req, res) => {
+    /*request(
+                                                              "https://www.espn.com/nba/team/schedule/_/name/mia",
+                                                              (error, response, html) => {
+                                                                  if (!error && response.statusCode == 200) {
+                                                                      const $ = cheerio.load(html);
+                                                                      const elementSelector =
+                                                                          "#fittPageContainer > div.StickyContainer > div.page-container.cf > div > div.layout__column.layout__column--1 > section > div > section > section > div > div > div > div.Table__Scroller > table > tbody > tr";
+                                                                      $(elementSelector).each((parentIndex, parentElement) => {
+                                                                          $(parentElement)
+                                                                              .children()
+                                                                              .each((childernIndex, childernElement) => {
+                                                                                  console.log($(childernElement).text());
+                                                                              });
+                                                                      });
+                                                                      //console.log(`table: ${table.json}`);
+                                                                      //res.type("text/html");
+                                                                      //res.send(`${table.json}`);
+                                                                  }
+                                                              }
+                                                          );*/
 });
 
 app.post("/register", (req, res) => {
     //CHECK IF THE USER ALREADY EXISTS
-    connection.query(
-        "SELECT user_name FROM users WHERE user_name= ?;",
-        req.body.userName,
-        (err, result, fields) => {
-            if (err) throw err;
-            //INSERT USER TO DB W/ HANDLING ERRORS
-            if (result.length === 0) {
-                let query =
-                    "INSERT INTO users (user_name, full_name, password) VALUES (?);";
-                let values = [req.body.userName, req.body.fullName, req.body.password];
-                connection.query(query, [values], (err, result) => {
-                    if (err) {
-                        res.send(
-                            JSON.stringify({ response: "Error", port: port, status: err })
-                        );
-                        throw err;
-                    } else {
-                        res.send(
-                            JSON.stringify({ response: "OK", port: port, status: result })
-                        );
-                    }
-                });
-            } else {
-                //IF THE USER EXISTS
-                res.send(
-                    JSON.stringify({
-                        response: "error",
-                        port: port,
-                        status: "User already esists.",
-                    })
-                );
-            }
-        }
-    );
+    try {
+        let values = [req.body.userName, req.body.fullName, req.body.password];
+        addUser(values);
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(400);
+    }
 });
 
-app.post("/changePassword", (req, res) => {
-    const verify = verifyAccessToken(req.cookies.AccessToken);
-    if (verify === true) {
+app.post("/changePassword", verifyAccessToken, (req, res) => {
+    try {
         const user = jwt.decode(
             req.cookies.accessToken,
             process.env.ACCCESS_TOKEN_SECRET
         ).user_name;
-        connection.query("UPDATE users SET password = ? WHERE user_name = ?;", [
-            req.body.password,
-            user,
-        ]);
-        res.cookie("AccessToken", accessToken, { httpOnly: true, path: "/" });
-        res.send(
-            JSON.stringify({
-                response: "OK",
-                port: port,
-                status: "Assigned new token",
-            })
-        );
+        changePassword(req.body.password, user);
+        res.sendStatus(200);
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(304);
     }
 });
 
-app.post("/users", async(req, res) => {
-    const verify = verifyAccessToken(req.cookies.AccessToken);
-    if (verify === true) {
-        const id = req.query.id;
-        const name = req.query.name;
+app.post("/users", verifyAccessToken, async(req, res) => {
+    const id = req.query.id;
+    const name = req.query.name;
+    try {
         if (id !== undefined) {
-            console.log(`request id: ${id}`);
-            connection.query(
-                "SELECT id, user_name, full_name FROM users WHERE id = ?;", [parseInt(id)],
-                (err, result) => {
-                    if (err) {
-                        res.sendStatus(404);
-                    } else {
-                        console.log(`id name: ${JSON.stringify(result)}`);
-                        res.send(result);
-                    }
-                }
+            getUserInfoByID(id).then((result) =>
+                res.status(201).send(JSON.stringify(result))
             );
         } else if (name !== undefined) {
-            console.log(`request name: ${name}`);
-            connection.query(
-                "SELECT id, user_name, full_name FROM users WHERE user_name = ?;", [name],
-                (err, result) => {
-                    if (err) {
-                        res.sendStatus(404);
-                    } else {
-                        console.log(`name users:${JSON.stringify(result)}`);
-                        res.send(result);
-                    }
-                }
+            getUserInfoByName(name).then((result) =>
+                res.status(201).send(JSON.stringify(result))
             );
         } else {
-            connection.query(
-                "SELECT id, user_name, full_name FROM users;",
-                (err, result) => {
-                    if (err) {
-                        res.sendStatus(404);
-                    } else {
-                        console.log(`all users: ${JSON.stringify(result)}`);
-                        res.send(result);
-                    }
-                }
+            getAllUserInfo().then((result) =>
+                res.status(201).send(JSON.stringify(result))
             );
         }
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(400);
     }
 });
 
 app.delete("/logout", (req, res) => {
-    const token = req.cookies.AccessToken;
-    const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
-    console.log(`user name: ${user}`);
-    connection.query(
-        "UPDATE users SET token = NULL WHERE user_name = ?;", [user],
-        (err, result) => {
-            if (err) {
-                console.log(`Token delete token: ${err}`);
-            } else {
-                res.clearCookie("AccessToken");
-                res.sendStatus(200);
-            }
-        }
-    );
+    try {
+        const token = req.cookies.AccessToken;
+        const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
+        logout(user);
+        res.clearCookie("AccessToken").sendStatus(200);
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(304);
+    }
 });
 
 app.post("/login", (req, res) => {
-    connection.query(
-        "SELECT * FROM users WHERE user_name= ?;",
-        req.body.userName,
-        (err, result, fields) => {
-            if (err) {
-                console.log(err);
-                throw err;
-            } else if (result.length === 0) {
-                res.send(
-                    JSON.stringify({
-                        response: "Error",
-                        port: port,
-                        status: "User doesn't exist",
-                    })
-                );
+    getUserInfoForLogin(req.body.userName)
+        .then((result) => {
+            console.log(`login result: ${JSON.stringify(result)}`);
+            if (!result) {
+                res.sendStatus(204);
             } else if (
-                result[0].user_name === req.body.userName &&
-                result[0].password === req.body.password
+                result.user_name === req.body.userName &&
+                result.password === req.body.password
             ) {
-                const verify = verifyAccessToken(result[0].token);
-                console.log(`Verification: ${verify}`);
-                if (verify === false) {
-                    const userName = req.body.userName;
-                    const user = { user_name: userName };
-                    const accessToken = generateAccessToken(user);
-                    connection.query("UPDATE users SET token = ? WHERE id = ?", [
-                        accessToken,
-                        result[0].id,
-                    ]);
-                    res.cookie("AccessToken", accessToken, {
-                        httpOnly: true,
-                    });
-                    res.send(
-                        JSON.stringify({
-                            response: "OK",
-                            port: port,
-                            status: "Assigned new token",
-                        })
-                    );
-                } else {
-                    res
-                        .cookie("AccessToken", result[0].token, {
-                            httpOnly: true,
-                        })
-                        .send(
-                            JSON.stringify({
-                                response: "OK",
-                                port: port,
-                                status: "Valid token",
-                            })
-                        );
-                }
+                const userName = req.body.userName;
+                const user = { user_name: userName };
+                const accessToken = generateAccessToken(user);
+                updateUserToken(accessToken, result.id);
+                res.cookie("AccessToken", accessToken, {
+                    httpOnly: true,
+                });
+                res.sendStatus(202);
             } else {
-                res.send(
-                    JSON.stringify({
-                        response: "ERROR",
-                        port: port,
-                        status: "",
-                    })
-                );
+                res.sendStatus(400);
             }
-        }
-    );
-});
-
-app.get("/auth", (req, res) => {
-    let isLoggedin;
-    if (!verifyAccessToken(req.cookies.AccessToken)) {
-        isLoggedin = false;
-    } else {
-        isLoggedin = true;
-    }
-    res.send(JSON.stringify({ loginStatus: isLoggedin }));
-});
-
-function verifyAccessToken(token) {
-    let isValid = false;
-    if (token === undefined) isValid = false;
-    else {
-        jwt.verify(token, process.env.ACCCESS_TOKEN_SECRET, (err, user) => {
-            if (err) {
-                console.log(`Validation error:${err}`);
-                isValid = false;
-            } else {
-                isValid = true;
-            }
+        })
+        .catch((err) => {
+            res.sendStatus(403);
         });
-    }
-    console.log(`Validation: ${isValid}`);
-    return isValid;
-}
+});
 
-function generateAccessToken(user) {
-    return jwt.sign(user, process.env.ACCCESS_TOKEN_SECRET, { expiresIn: "24h" });
-}
+app.get("/auth", verifyAccessToken, (req, res) => {
+    try {
+        res.status(202).send(JSON.stringify({ loginStatus: true }));
+    } catch (err) {
+        res.sendStatus(401);
+    }
+});

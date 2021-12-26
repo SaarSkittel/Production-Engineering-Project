@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useHistory } from "react-router-dom";
+import History from "../History";
 import {Redirect} from "react-router-dom";
 import {
   Button,
@@ -9,6 +9,10 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
+function useForceUpdate(){
+  const [value, setValue] = useState(0); // integer state
+  return () => setValue(value => value + 1); // update the state to force render
+}
 const useStyle = makeStyles((theme) => ({
   paper: {
     padding: "30px 20px",
@@ -23,13 +27,13 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 const LoginPage = (props) => {
-  let history = useHistory();
+  const forceUpdate = useForceUpdate();
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const classes = useStyle();
   if(props.isLoggedIn){
-    return <Redirect to="/" />
+    History.goBack();
   }
   else{
   return (
@@ -83,7 +87,7 @@ const LoginPage = (props) => {
                       //CHECK IF RESPONSE FROM SERVERS
                       console.log(dataRes);
                       //GO TO HOME PAGE AND CLEAR HISTORY
-                      window.location.reload();
+                      forceUpdate();
                     })
                     .catch((err) => {
                       console.log(err);

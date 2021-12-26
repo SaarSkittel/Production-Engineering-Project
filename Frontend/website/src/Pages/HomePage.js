@@ -3,12 +3,13 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { makeStyles, Typography } from "@material-ui/core";
 import UserTable from "../Components/UserTable";
+import ReactDOM from 'react-dom';
 
 const useStyle = makeStyles((theme) => {});
 
 const HomePage = (props) => {
   const classes = useStyle();
-  const [nameData, setNameData] = useState();
+  const [nameData, setNameData] = useState([]);
   const [tableData, setTableData] = useState([]);
 
   const [userData, setUserData] = useState([]);
@@ -27,10 +28,10 @@ const HomePage = (props) => {
 
   useEffect(() => {
     fetch("http://localhost:8002/", requestOptionsGet)
-      .then((response) => response.json())
-      .then((data) => {
+      .then((response) => response.json()).then((data)=>{
+        console.log(data);
         setNameData(data);
-      })
+      })     
       .catch((err) => {
         console.log(err);
       });
@@ -47,11 +48,10 @@ const HomePage = (props) => {
       });
   }, []);
 
-
   return (
     <div>
-      <Typography> {!nameData ? "Loading..." : nameData} </Typography>
-      {!props.isLoggedIn? <Typography>Not logged in</Typography>:<UserTable userList= {tableData}/>}
+      {!nameData ?<Typography>Loading...</Typography>  : nameData} 
+      {!tableData? <Typography>Not logged in</Typography>:<UserTable userList= {tableData}/>}
     </div>
   );
 };

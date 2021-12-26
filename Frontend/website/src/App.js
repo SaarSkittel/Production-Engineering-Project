@@ -36,10 +36,10 @@ function App() {
         <NavBar isLoggedIn={login} />
         <div>
           <Switch>
-            <Route exact path="/change_password"> <ChangePasswordPage isLoggedIn={login} /> </Route>
+            <Route exact path="/change_password" > <ChangePasswordPage isLoggedIn={login} /> </Route>
             <Route exact path="/register"> <RegisterPage isLoggedIn={login}/> </Route>
             <Route exact path="/login"> <LoginPage isLoggedIn={login}/> </Route>
-            <Route exact path="/"> <HomePage isLoggedIn={login} /> </Route> 
+            <Route exact path="/"> <HomePage isLoggedIn={login} /> </Route>
           </Switch>
         </div>
       </div>
