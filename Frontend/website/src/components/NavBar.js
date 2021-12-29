@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useContext } from "react";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -6,11 +6,11 @@ import { useHistory } from "react-router-dom";
 import { Button, makeStyles } from "@material-ui/core";
 import Drawer from "./Drawer";
 import { Redirect } from "react-router-dom";
-import { useState } from "react";
+import Auth from "../Functions/Auth";
 
-function useForceUpdate(){
+function useForceUpdate() {
   const [value, setValue] = useState(0); // integer state
-  return () => setValue(value => value + 1); // update the state to force render
+  return () => setValue((value) => value + 1); // update the state to force render
 }
 
 const useStyle = makeStyles((theme) => ({
@@ -24,6 +24,7 @@ const useStyle = makeStyles((theme) => ({
 
 const NavBar = (props) => {
   const classes = useStyle();
+  let { isLoggedIn, setAccessToken, setLogin, accessToken } = useContext(Auth);
   const forceUpdate = useForceUpdate();
   let history = useHistory();
   const requestOptionsDelete = {
@@ -33,8 +34,7 @@ const NavBar = (props) => {
 
   return (
     <div>
-      {props.isLoggedIn ? 
-       (
+      {isLoggedIn ? (
         <AppBar position="static">
           <Toolbar className={classes.appBar} variant="dense">
             <Drawer isLoggedIn={props.isLoggedIn} />
@@ -49,9 +49,10 @@ const NavBar = (props) => {
                   .then((response) => response.json())
                   .then((dataRes) => {
                     //CHECK IF RESPONSE FROM SERVERS
-                    console.log(dataRes);
+                    setAccessToken(null);
+                    setLogin(false);
                     //GO TO HOME PAGE AND CLEAR HISTORY
-                    forceUpdate();
+                    return <Redirect to={"/"} />;
                   })
                   .catch((err) => {
                     console.log(err);
@@ -62,29 +63,30 @@ const NavBar = (props) => {
             </Button>
           </Toolbar>
         </AppBar>
-      )
-       :  (<AppBar position="static">
-      <Toolbar className={classes.appBar} variant="dense">
-        <Drawer />
-        <Typography variant="h6" color="common.white" component="div">
-          Saar Skittel
-        </Typography>
-        <Button
-          color="inherit"
-          position="absolute"
-          onClick={() => history.push("/register")}
-        >
-          Register
-        </Button>
-        <Button
-          color="inherit"
-          position="absolute"
-          onClick={() => history.push("/login")}
-        >
-          Login
-        </Button>
-      </Toolbar>
-    </AppBar>)}
+      ) : (
+        <AppBar position="static">
+          <Toolbar className={classes.appBar} variant="dense">
+            <Drawer />
+            <Typography variant="h6" color="common.white" component="div">
+              Saar Skittel
+            </Typography>
+            <Button
+              color="inherit"
+              position="absolute"
+              onClick={() => history.push("/register")}
+            >
+              Register
+            </Button>
+            <Button
+              color="inherit"
+              position="absolute"
+              onClick={() => history.push("/login")}
+            >
+              Login
+            </Button>
+          </Toolbar>
+        </AppBar>
+      )}
     </div>
   );
 };

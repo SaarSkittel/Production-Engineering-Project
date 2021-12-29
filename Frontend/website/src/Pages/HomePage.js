@@ -1,57 +1,50 @@
 import React from "react";
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { makeStyles, Typography } from "@material-ui/core";
 import UserTable from "../Components/UserTable";
-import ReactDOM from 'react-dom';
+import ReactDOM from "react-dom";
+import Auth from "../Functions/Auth";
 
 const useStyle = makeStyles((theme) => {});
 
 const HomePage = (props) => {
   const classes = useStyle();
-  const [nameData, setNameData] = useState([]);
-  const [tableData, setTableData] = useState([]);
-
+  
+  const [tableData, setTableData] = useState();
+  let { accessToken,getUserTable, getUserName, userTable, userName} = useContext(Auth);
   const [userData, setUserData] = useState([]);
 
+  useEffect(() => {
+    getUserTable(accessToken);
+    let interval = setInterval(() => {
+      getUserTable(accessToken);
+    }, 300000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [accessToken]);
 
-  const requestOptionsGet = {
-    method: "GET",
-    credentials: "include",
-  };
-  
-  const requestOptionsPost = {
-    method: "POST",
-    credentials: 'include',
-    headers: { "Content-Type": "application/json" },
-  };
+//300000 ms
 
   useEffect(() => {
-    fetch("http://localhost:8002/", requestOptionsGet)
-      .then((response) => response.json()).then((data)=>{
-        console.log(data);
-        setNameData(data);
-      })     
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
-
-  useEffect(() => {
-    fetch("http://localhost:8002/users", requestOptionsPost)
-      .then((response) => response.json())
-      .then((data) => {
-        setTableData(data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+    getUserName(accessToken);
+    let interval = setInterval(() => {
+        getUserName(accessToken);
+    }, 300000);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [accessToken]);
 
   return (
     <div>
-      {!nameData ?<Typography>Loading...</Typography>  : nameData} 
-      {!tableData? <Typography>Not logged in</Typography>:<UserTable userList= {tableData}/>}
+      {accessToken? <Typography>{accessToken}</Typography>:<Typography>null</Typography>}
+      {!userName ? <Typography>Loading...</Typography> : <Typography>{userName}</Typography> }
+      {!userTable ? (
+        <Typography>Not logged in</Typography>
+      ) : (
+        <UserTable userList={userTable} />
+      )}
     </div>
   );
 };

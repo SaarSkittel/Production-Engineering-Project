@@ -39,7 +39,7 @@ function getUserInfoByName(name) {
                     //res.sendStatus(404);
                     return reject(err);
                 } else {
-                    console.log(`name users:${JSON.stringify(result)}`);
+                    //console.log(`name users:${JSON.stringify(result)}`);
                     //res.send(result);
                     resolve(result);
                 }
@@ -57,7 +57,7 @@ function getAllUserInfo() {
                     //res.sendStatus(404);
                     return reject(err);
                 } else {
-                    console.log(`all users: ${JSON.stringify(result)}`);
+                    //console.log(`all users: ${JSON.stringify(result)}`);
                     //res.send(result);
                     resolve(result);
                 }
@@ -104,6 +104,21 @@ function getUserInfoForLogin(userName) {
     );
 }
 
+function getRefreshToken(userName) {
+    return new Promise((resolve, reject) =>
+        connection.query(
+            "SELECT refresh_token FROM users WHERE user_name=?;",
+            userName,
+            (err, result, fields) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(result);
+            }
+        )
+    );
+}
+
 function updateUserToken(token, id) {
     connection.query(
         "UPDATE users SET token = ? WHERE id = ?", [token, id],
@@ -113,6 +128,21 @@ function updateUserToken(token, id) {
             }
         }
     );
+}
+
+function updateUserRefreshToken(token, id) {
+    return new Promise((resolve, reject) => {
+        console.log("query token: " + token);
+        connection.query(
+            "UPDATE users SET refresh_token = ? WHERE id = ?;", [token, id],
+            (err, result, fields) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            }
+        );
+    });
 }
 
 function addUser(values) {
@@ -137,7 +167,7 @@ function addUser(values) {
 function databaseSetup() {
     connection.connect((err) => {
         connection.query(
-            "CREATE TABLE IF NOT EXISTS users(id INTEGER AUTO_INCREMENT, user_name VARCHAR(255) NOT NULL, full_name TEXT NOT NULL, password TEXT NOT NULL, token TEXT, PRIMARY KEY(id, user_name));",
+            "CREATE TABLE IF NOT EXISTS users(id INTEGER AUTO_INCREMENT, user_name VARCHAR(255) NOT NULL, full_name TEXT NOT NULL, password TEXT NOT NULL, token TEXT,refresh_token TEXT, PRIMARY KEY(id, user_name));",
             (err, result) => {
                 if (err) console.log(err);
             }
@@ -156,4 +186,6 @@ module.exports = {
     addUser,
     createConnection,
     databaseSetup,
+    updateUserRefreshToken,
+    getRefreshToken,
 };

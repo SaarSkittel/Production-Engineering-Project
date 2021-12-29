@@ -5,7 +5,12 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const request = require("request");
 const cheerio = require("cheerio");
-const { verifyAccessToken, generateAccessToken } = require("./Auth");
+const {
+    verifyAccessToken,
+    generateAccessToken,
+    generateRefreshToken,
+    verifyRefreshToken,
+} = require("./Auth");
 const {
     getUserInfoByID,
     getUserInfoByName,
@@ -17,6 +22,8 @@ const {
     addUser,
     createConnection,
     databaseSetup,
+    updateUserRefreshToken,
+    getRefreshToken,
 } = require("./Queries");
 require("dotenv").config();
 
@@ -37,27 +44,28 @@ app.listen(port, () => {
     databaseSetup();
 });
 
-app.get("/", verifyAccessToken, async(req, res) => {
+app.get("/", async(req, res) => {
+    res.sendStatus(200);
     /*request(
-                                                              "https://www.espn.com/nba/team/schedule/_/name/mia",
-                                                              (error, response, html) => {
-                                                                  if (!error && response.statusCode == 200) {
-                                                                      const $ = cheerio.load(html);
-                                                                      const elementSelector =
-                                                                          "#fittPageContainer > div.StickyContainer > div.page-container.cf > div > div.layout__column.layout__column--1 > section > div > section > section > div > div > div > div.Table__Scroller > table > tbody > tr";
-                                                                      $(elementSelector).each((parentIndex, parentElement) => {
-                                                                          $(parentElement)
-                                                                              .children()
-                                                                              .each((childernIndex, childernElement) => {
-                                                                                  console.log($(childernElement).text());
-                                                                              });
-                                                                      });
-                                                                      //console.log(`table: ${table.json}`);
-                                                                      //res.type("text/html");
-                                                                      //res.send(`${table.json}`);
-                                                                  }
-                                                              }
-                                                          );*/
+                                                                                                                                                                                                                                                                                                                          "https://www.espn.com/nba/team/schedule/_/name/mia",
+                                                                                                                                                                                                                                                                                                                          (error, response, html) => {
+                                                                                                                                                                                                                                                                                                                              if (!error && response.statusCode == 200) {
+                                                                                                                                                                                                                                                                                                                                  const $ = cheerio.load(html);
+                                                                                                                                                                                                                                                                                                                                  const elementSelector =
+                                                                                                                                                                                                                                                                                                                                      "#fittPageContainer > div.StickyContainer > div.page-container.cf > div > div.layout__column.layout__column--1 > section > div > section > section > div > div > div > div.Table__Scroller > table > tbody > tr";
+                                                                                                                                                                                                                                                                                                                                  $(elementSelector).each((parentIndex, parentElement) => {
+                                                                                                                                                                                                                                                                                                                                      $(parentElement)
+                                                                                                                                                                                                                                                                                                                                          .children()
+                                                                                                                                                                                                                                                                                                                                          .each((childernIndex, childernElement) => {
+                                                                                                                                                                                                                                                                                                                                              console.log($(childernElement).text());
+                                                                                                                                                                                                                                                                                                                                          });
+                                                                                                                                                                                                                                                                                                                                  });
+                                                                                                                                                                                                                                                                                                                                  //console.log(`table: ${table.json}`);
+                                                                                                                                                                                                                                                                                                                                  //res.type("text/html");
+                                                                                                                                                                                                                                                                                                                                  //res.send(`${table.json}`);
+                                                                                                                                                                                                                                                                                                                              }
+                                                                                                                                                                                                                                                                                                                          }
+                                                                                                                                                                                                                                                                                                                      );*/
 });
 
 app.post("/register", (req, res) => {
@@ -74,8 +82,8 @@ app.post("/register", (req, res) => {
 app.post("/changePassword", verifyAccessToken, (req, res) => {
     try {
         const user = jwt.decode(
-            req.cookies.accessToken,
-            process.env.ACCCESS_TOKEN_SECRET
+            req.cookies.RefreshToken,
+            process.env.REFRESH_TOKEN_SECRET
         ).user_name;
         changePassword(req.body.password, user);
         res.sendStatus(200);
@@ -113,36 +121,66 @@ app.delete("/logout", (req, res) => {
         const token = req.cookies.AccessToken;
         const user = jwt.decode(token, process.env.ACCCESS_TOKEN_SECRET).user_name;
         logout(user);
-        res.clearCookie("AccessToken").sendStatus(200);
+        res.clearCookie("RefreshToken").sendStatus(200);
     } catch (err) {
         console.log(err);
         res.sendStatus(304);
     }
 });
 
-app.post("/login", (req, res) => {
-    getUserInfoForLogin(req.body.userName)
-        .then((result) => {
-            console.log(`login result: ${JSON.stringify(result)}`);
-            if (!result) {
+app.post("/token", async(req, res) => {
+    try {
+        const cookie = cookieParser.JSONCookies(req.cookies);
+        const refreshToken = cookie.RefreshToken;
+        if (!refreshToken) return res.sendStatus(401);
+        const userName = await jwt.decode(
+            refreshToken,
+            process.env.REFRESH_TOKEN_SECRET
+        ).user_name;
+        getRefreshToken(userName)
+            .then(async(result) => {
+                let tokenFromDB = result[0].refresh_token;
+                let dbstring = JSON.stringify(tokenFromDB);
+                if (!dbstring) {
+                    return res.sendStatus(403);
+                } else if (dbstring !== JSON.stringify(refreshToken)) {
+                    return res.sendStatus(403);
+                } else if (!(await verifyRefreshToken(refreshToken))) {
+                    return res.sendStatus(403);
+                } else {
+                    console.log("all good");
+                    res.json({ AccessToken: await generateAccessToken(userName) });
+                }
+            })
+            .catch((err) => console.log(err));
+    } catch (err) {
+        console.log(err);
+        res.sendStatus(400);
+    }
+});
+
+app.post("/login", async(req, res) => {
+    await getUserInfoForLogin(req.body.userName)
+        .then(async(result) => {
+            if (!result || result.password !== req.body.password) {
                 res.sendStatus(204);
-            } else if (
-                result.user_name === req.body.userName &&
-                result.password === req.body.password
-            ) {
+            } else if (result.password === req.body.password) {
                 const userName = req.body.userName;
+                const id = result.id;
                 const user = { user_name: userName };
-                const accessToken = generateAccessToken(user);
-                updateUserToken(accessToken, result.id);
-                res.cookie("AccessToken", accessToken, {
-                    httpOnly: true,
-                });
-                res.sendStatus(202);
+                let refreshToken = await generateRefreshToken(user);
+                await updateUserRefreshToken(await refreshToken, id);
+                res
+                    .cookie("RefreshToken", await refreshToken, {
+                        httpOnly: true,
+                    })
+                    .sendStatus(200);
             } else {
                 res.sendStatus(400);
             }
         })
         .catch((err) => {
+            console.log(err);
             res.sendStatus(403);
         });
 });

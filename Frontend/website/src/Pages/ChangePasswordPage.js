@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import {Redirect} from "react-router-dom";
+import React, { useState, useContext } from "react";
+import { Redirect } from "react-router-dom";
+import Auth from "../Functions/Auth";
 import {
   Button,
   Grid,
@@ -22,6 +23,7 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 const ChangePasswordPage = (props) => {
+  let { accessToken } = useContext(Auth);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -76,8 +78,11 @@ const ChangePasswordPage = (props) => {
                     //POST REQUEST W/ DATA
                     const requestOptions = {
                       method: "Post",
-                      headers: { "Content-Type": "application/json" },
-                      credentials: 'include',
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer " + accessToken,
+                      },
+                      credentials: "include",
                       body: JSON.stringify(data),
                     };
                     fetch(
