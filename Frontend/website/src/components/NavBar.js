@@ -24,13 +24,9 @@ const useStyle = makeStyles((theme) => ({
 
 const NavBar = (props) => {
   const classes = useStyle();
-  let { isLoggedIn, setAccessToken, setLogin, accessToken } = useContext(Auth);
+  let { isLoggedIn, logout } = useContext(Auth);
   const forceUpdate = useForceUpdate();
   let history = useHistory();
-  const requestOptionsDelete = {
-    method: "DELETE",
-    credentials: "include",
-  };
 
   return (
     <div>
@@ -45,18 +41,7 @@ const NavBar = (props) => {
               color="inherit"
               position="absolute"
               onClick={() => {
-                fetch("http://localhost:8002/logout", requestOptionsDelete)
-                  .then((response) => response.json())
-                  .then((dataRes) => {
-                    //CHECK IF RESPONSE FROM SERVERS
-                    setAccessToken(null);
-                    setLogin(false);
-                    //GO TO HOME PAGE AND CLEAR HISTORY
-                    return <Redirect to={"/"} />;
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                  });
+                logout();
               }}
             >
               Logout

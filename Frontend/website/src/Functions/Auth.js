@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from "react";
-
+import { Redirect } from "react-router-dom";
 const Auth = createContext();
 
 export default Auth;
@@ -17,6 +17,11 @@ export const AuthProvider = ({ children }) => {
     headers: {
       "Content-Type": "application/json",
     },
+  };
+
+  const requestOptionsDelete = {
+    method: "DELETE",
+    credentials: "include",
   };
 
   let requestOptionsUserName =(token) =>{ return( {
@@ -57,6 +62,20 @@ let getUserTable=(token) => {
       });
   };
 
+let logout=()=>{
+  fetch("http://localhost:8002/logout", requestOptionsDelete)
+    .then((response) => response.json())
+    .then((dataRes) => {
+      //CHECK IF RESPONSE FROM SERVERS
+      setAccessToken(null);
+      setLogin(false);
+      //GO TO HOME PAGE AND CLEAR HISTORY
+      return <Redirect to={"/"} />;
+      })
+  .catch((err) => {
+   console.log(err);
+    });
+};
 
   let updateAccessToken = () => {
     fetch("http://localhost:8002/token", requestOptionsToken)
@@ -92,7 +111,8 @@ let getUserTable=(token) => {
     getUserTable:getUserTable,
     getUserName:getUserName,
     userName:userName,
-    userTable:userTable
+    userTable:userTable,
+    logout:logout
   };
   return <Auth.Provider value={contextData}>{children}</Auth.Provider>;
 };
