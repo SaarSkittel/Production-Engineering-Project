@@ -4,7 +4,7 @@
 An ongoing project where I created a full-blown ecosystem that runs on Docker with a friendly UI, dynamic http serving backend written in NodeJS (express) with two Nginx LoadBalancers.
 The project utilizes MySQL for user data, JWT, Graphite and Grafana to monitor the collect, store and analyze metrics from the services.
 ## Project Components
-###Backend 
+### Backend 
 #### Servers
 This project utilizes three identical Node.js servers to handle redundancy problems and it is using Express.js.
 The servers functions as a REST API that handles http request from the Frontend.
