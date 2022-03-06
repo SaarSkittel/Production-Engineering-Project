@@ -10,8 +10,8 @@ This project utilizes three identical Node.js servers to handle redundancy probl
 The servers functions as a REST API that handles http request from the Frontend.
 Those request modify, create, collected and delete data from the MySQL Database.
 ##### Technologies used:
-MySQL- the API request modify, create, collected and delete data from the MySQL Database server.
-JWT- The requests that are sent to the server are authenticated by with both access token and refresh token to ensure fraud and identity theft. The access token is given to the user when he logs in it has an expiration time of an hour the user gets it in the response or when he request to refresh it when it is expired.
+•	MySQL- the API request modify, create, collected and delete data from the MySQL Database server.
+•	JWT- The requests that are sent to the server are authenticated by with both access token and refresh token to ensure fraud and identity theft. The access token is given to the user when he logs in it has an expiration time of an hour the user gets it in the response or when he request to refresh it when it is expired.
 The refresh token is also given when the user logs in and it is stored in the cookies as an HttpOnly so the refresh token only visible to the server.
 #### MySQL
 The Database stores all of the users data.
