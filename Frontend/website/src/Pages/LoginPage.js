@@ -1,7 +1,6 @@
-import React, { useState,useContext } from "react";
+import React, { useState, useContext } from "react";
 import History from "../History";
 import { Redirect } from "react-router-dom";
-
 
 import {
   Button,
@@ -30,7 +29,7 @@ const useStyle = makeStyles((theme) => ({
   },
 }));
 const LoginPage = (props) => {
-  const {setAccessToken,setLogin,updateAccessToken }=useContext(Auth);
+  const { setAccessToken, setLogin, updateAccessToken } = useContext(Auth);
   const forceUpdate = useForceUpdate();
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
@@ -77,7 +76,7 @@ const LoginPage = (props) => {
                       userName: userName,
                       password: password,
                     };
-                    //GET REQUEST W/ DATA
+                    //POST REQUEST W/ DATA
                     const requestOptions = {
                       method: "POST",
                       credentials: "include",
@@ -85,18 +84,16 @@ const LoginPage = (props) => {
                       body: JSON.stringify(data),
                     };
                     fetch("http://localhost:8002/login", requestOptions)
-
-                    .then((response) =>{
-                      if(response.status===200){
-                      updateAccessToken();
-                      forceUpdate();
-                      }
-                      else{
-                        setError("Incorrect username or password.");
-                      }
-                  }
-                 )
-                 /*
+                      .then((response) => {
+                        if (response.status === 200) {
+                          console.log(response);
+                          updateAccessToken();
+                          forceUpdate();
+                        } else {
+                          setError("Incorrect username or password.");
+                        }
+                      })
+                      /*
                     .then((response) => {
                         let data =response.json(); 
                         console.log(data);

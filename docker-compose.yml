@@ -51,7 +51,6 @@ services:
   lb2:
     container_name: lb2
     build: ./Backend/Load Balancer
-  
     ports:
       - 8004:80
     expose:
@@ -70,12 +69,11 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=80
+      - NAME=server1
     volumes:
       - ./Backend/Server:/home/node/app
     ports:
       - "8005:80"
-    links:
-      - statsd:statsd
     expose:
       - 80
     depends_on:
@@ -91,6 +89,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=80
+      - NAME=server2
     volumes:
       - ./Backend/Server:/home/node/app
     networks:
@@ -98,8 +97,7 @@ services:
         ipv4_address: 172.28.0.6
     ports:
       - "8006:80"
-    links:
-      - statsd:statsd
+   
     depends_on:
       - "db"
     expose:
@@ -112,14 +110,14 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=80
+      - NAME=server3 
     volumes:
       - ./Backend/Server:/home/node/app
     ports:
       - "8007:80"
     expose:
       - 80
-    links:
-      - statsd:statsd
+   
     command: "npm start"
     depends_on:
       - "db"
@@ -127,6 +125,22 @@ services:
       backend:
         ipv4_address: 172.28.0.7
   
+  python_server:
+    container_name: python_server
+    build: ./Backend/PythonServer
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./Backend/PythonServer:/code
+    ports:
+      - 8000:8000
+    expose:
+      - 8000
+    depends_on:
+      - "db"
+    networks:
+      backend:
+        ipv4_address: 172.28.0.15
+        
   db:
     container_name: mysql
     image: mysql:latest
@@ -142,18 +156,15 @@ services:
           target: /var/lib/mysql
     ports:
       - 6033:3306
-    links:
-      - statsd:statsd
     networks:
       backend:
         ipv4_address: 172.28.0.8
         
-  metrics:
-    container_name: metrics
-    image: hopsoft/graphite-statsd
+  graphite:
+    container_name: graphite
+    image: graphiteapp/graphite-statsd
     ports:
-      - "80:80"
-      - "81:81"
+      - "81:80"
       - "2003-2004:2003-2004"
       - "2023-2024:2023-2024"
       - "8125:8125/udp"
@@ -162,56 +173,71 @@ services:
       - "server1"
       - "server2"
       - "server3"
+    volumes:
+      - ./Backend/Metrics/graphite/configs:/opt/graphite/conf
+      - ./Backend/Metrics/graphite/data:/opt/graphite/storage
+      - ./Backend/Metrics/logrotate:/etc/logrotate.d
     networks:
       backend:
         ipv4_address: 172.28.0.10
 
-  logstach:
-    container_name: logstach
-    image: docker.elastic.co/logstash/logstash:7.15.2
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    volumes:
+       - ./Backend/Metrics/grafana/data:/var/lib/grafana
+       - ./Backend/Metrics/grafana/logs:/var/log/grafana
+       - ./Backend/Metrics/grafana/data/provisioning:/etc/grafana/provisioning
     ports:
-      - 9200:9200
+     - "80:3000"
     depends_on:
-      - "server1"
-      - "server2"
-      - "server3"
-    
+      - "graphite"
+    networks:
+      backend:
+        ipv4_address: 172.28.0.14
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
+    ports:
+      - '9200:9200'
+      - '9300:9300'
+    environment:
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     networks:
       backend:
         ipv4_address: 172.28.0.11
 
-#  logger:
-#    container_name: logger
-#    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
-#    ports:
-#      - 9200:9200
-#      - 9300:9300
-#    environment:
-#      - discovery.type=single-node
-#    depends_on:
-#      - "server1"
-#      - "server2"
-#      - "server3"
-#    networks:
-#      backend:
-#        ipv4_address: 172.28.0.11
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.16.3
+    ports:
+      - '5601:5601'
+    networks:
+      backend:
+        ipv4_address: 172.28.0.12
 
-#  kibana:
-#    image: kibana:7.4.1
-#    links: 
-#      - logger
-#    ports:
-#      - 5601:5901
-#    depends_on:
-#      - "logger"
-#    networks:
-#      backend:
-#        ipv4_address: 172.28.0.12
-
-
-
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:7.16.3
+    ports:
+      - '5000:5000'
+    volumes:
+      - type: bind
+        source: ./Backend/Logstash/logstash_pipeline/
+        target: /usr/share/logstash/pipeline
+        read_only: true
+    networks:
+      backend:
+        ipv4_address: 172.28.0.13
+        
 networks:
   backend:
+    driver: bridge
     ipam:
       config:
         - subnet: 172.28.0.0/16

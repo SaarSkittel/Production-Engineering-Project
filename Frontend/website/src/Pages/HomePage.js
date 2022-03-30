@@ -9,9 +9,10 @@ const useStyle = makeStyles((theme) => {});
 
 const HomePage = (props) => {
   const classes = useStyle();
-  
+
   const [tableData, setTableData] = useState();
-  let { accessToken,getUserTable, getUserName, userTable, userName} = useContext(Auth);
+  let { accessToken, getUserTable, getUserName, userTable, userName } =
+    useContext(Auth);
   const [userData, setUserData] = useState([]);
 
   useEffect(() => {
@@ -24,12 +25,12 @@ const HomePage = (props) => {
     };
   }, [accessToken]);
 
-//300000 ms
+  //300000 ms
 
   useEffect(() => {
     getUserName(accessToken);
     let interval = setInterval(() => {
-        getUserName(accessToken);
+      getUserName(accessToken);
     }, 300000);
     return () => {
       clearInterval(interval);
@@ -38,13 +39,26 @@ const HomePage = (props) => {
 
   return (
     <div>
-      {accessToken? <Typography>{accessToken}</Typography>:<Typography>null</Typography>}
-      {!userName ? <Typography>Loading...</Typography> : <Typography>{userName}</Typography> }
+      {accessToken ? (
+        <Typography>{accessToken}</Typography>
+      ) : (
+        <Typography>null</Typography>
+      )}
+      {!userName ? (
+        <Typography>Loading...</Typography>
+      ) : (
+        <Typography>{userName}</Typography>
+      )}
       {!userTable ? (
         <Typography>Not logged in</Typography>
       ) : (
         <UserTable userList={userTable} />
       )}
+      <div>
+        <video id="videoPlayer" width="650" controls>
+          <source src="http://localhost:8002/video" type="video/mp4" />
+        </video>
+      </div>
     </div>
   );
 };

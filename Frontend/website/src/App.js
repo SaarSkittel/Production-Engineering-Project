@@ -33,27 +33,27 @@ function App() {
   return (
     <Router history={History}>
       <AuthProvider>
-      <div className="App">
-        <NavBar isLoggedIn={login} />
-        <Switch>
-          <Route exact path="/change_password">
-            {" "}
-            <ChangePasswordPage isLoggedIn={login} />{" "}
-          </Route>
-          <Route exact path="/register">
-            {" "}
-            <RegisterPage isLoggedIn={login} />{" "}
-          </Route>
-          <Route exact path="/login">
-            {" "}
-            <LoginPage isLoggedIn={login} setLogin={setLogin} />{" "}
-          </Route>
-          <Route exact path="/">
-            {" "}
-            <HomePage isLoggedIn={login} />{" "}
-          </Route>
-        </Switch>
-      </div>
+        <div className="App">
+          <NavBar isLoggedIn={login} />
+          <Switch>
+            <Route exact path="/change_password">
+              {" "}
+              <ChangePasswordPage isLoggedIn={login} />{" "}
+            </Route>
+            <Route exact path="/register">
+              {" "}
+              <RegisterPage isLoggedIn={login} />{" "}
+            </Route>
+            <Route exact path="/login">
+              {" "}
+              <LoginPage isLoggedIn={login} setLogin={setLogin} />{" "}
+            </Route>
+            <Route exact path="/">
+              {" "}
+              <HomePage isLoggedIn={login} />{" "}
+            </Route>
+          </Switch>
+        </div>
       </AuthProvider>
     </Router>
   );
