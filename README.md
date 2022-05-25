@@ -20,7 +20,7 @@ The Database stores all of the users data.
  Monitor the collect, store and analyze metrics from the services.  Gets all the status code reports, Database query times and user count made by the servers and shows them in graphs.
 #### Grafana
 Uses the data collected by graphite and give it a more pleasing UI representation.  
-#### Nginx LoadBlancers
+#### Nginx Load Blancers
 To handle high availability the load balancer send the request to the servers using the round robin (no persistency).
 ### Frontend
 The Frontend is written in React.js using MaterialUI and it send all the requests to the servers and shows data that came from the responses.
