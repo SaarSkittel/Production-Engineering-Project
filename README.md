@@ -6,9 +6,10 @@ The project utilizes MySQL for user data, JWT, Graphite and Grafana to monitor t
 ## Project Components
 ### Backend 
 #### Servers
-This project utilizes three identical Node.js servers to handle redundancy problems and it is using Express.js.
+This project utilizes three identical Node.js and Python servers to handle redundancy problems and it is using Express.js and Django.
 The servers functions as a REST API that handles http request from the Frontend.
 Those request modify, create, collected and delete data from the MySQL Database.
+
 ##### Technologies used:
 •	MySQL- the API request modify, create, collected and delete data from the MySQL Database server.
 
