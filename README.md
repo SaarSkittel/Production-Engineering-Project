@@ -1,7 +1,7 @@
 # Scalable Serving Project
 ## Introduction
 
-An ongoing project where I created a full-blown ecosystem that runs on Docker with a friendly UI, dynamic http serving backend written in NodeJS (express) with two Nginx LoadBalancers.
+An ongoing project where I created a full-blown ecosystem that runs on Docker with a friendly UI, dynamic http serving backend written in NodeJS (express) and Python (Django) with two Nginx LoadBalancers.
 The project utilizes MySQL for user data, JWT, Graphite and Grafana to monitor the collect, store and analyze metrics from the services.
 ## Project Components
 ### Backend 
