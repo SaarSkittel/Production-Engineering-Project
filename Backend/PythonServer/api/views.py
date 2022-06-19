@@ -3,7 +3,6 @@ from rest_framework.response import Response
 from Auth import generate_refresh_token, generate_access_token
 
 from .Queries import Queries
-import json
 DB = Queries()
 
 
@@ -34,6 +33,7 @@ def register(request):
 
 @ api_view(["POST"])
 def change_password(request):
+    
     # user name should be decode from JWT
     # new password is give from post request
     pass

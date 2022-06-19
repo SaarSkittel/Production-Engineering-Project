@@ -6,19 +6,19 @@ refresh_token = settings.REFRESH_TOKEN_SECRET
 
 
 def verify_access_token(token):
-    data = jwt.decode(token, access_token)
-    if data["exp"] < datetime.now(tz=datetime.timezone.utc):
-        pass
-    else:
-        pass
+    try:
+        data = jwt.decode(token, access_token)
+    except jwt.ExpiredSignatureError:
+        raise jwt.ExpiredSignatureError
 
 
 def verify_refresh_token(token):
-    data = jwt.decode(token, refresh_token)
-    if data["exp"] < datetime.now(tz=datetime.timezone.utc):
-        pass
-    else:
-        pass
+    try:
+        data = jwt.decode(token, refresh_token)
+        
+    except jwt.ExpiredSignatureError:
+        raise jwt.ExpiredSignatureError
+
 
 
 def generate_access_token(user):

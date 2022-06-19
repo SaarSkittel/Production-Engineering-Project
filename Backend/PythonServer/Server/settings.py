@@ -57,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+
 ROOT_URLCONF = 'Server.urls'
 ACCCESS_TOKEN_SECRET = env("ACCCESS_TOKEN_SECRET")
 REFRESH_TOKEN_SECRET = env("REFRESH_TOKEN_SECRET")

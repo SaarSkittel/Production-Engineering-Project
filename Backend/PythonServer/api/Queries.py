@@ -19,7 +19,6 @@ class Queries:
         return self.cursorObject.fetchall()
 
     def get_user_info_by_name(self, name):
-
         self.cursorObject.execute(
             f"SELECT id, user_name, full_name FROM users WHERE user_name={name};")
         return self.cursorObject.fetchall()
